@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PokemonList, PokemonDetails } from './types';
-import './PokeList.css'; // Import a CSS file for styling
+import './PokeList.css';
 
 const PokeList: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<PokemonList | null>(null);
@@ -21,8 +21,9 @@ const PokeList: React.FC = () => {
           nextUrl = response.data.next;
         }
 
-        // Extract only the necessary properties (name and url)
-        const formattedPokemon: Pokemon[] = allPokemon.map((pokemon) => ({
+        // Extract only the necessary properties (name, url, and id)
+        const formattedPokemon: Pokemon[] = allPokemon.map((pokemon, index) => ({
+          id: index + 1, // Add 1 to index to get the correct Pokemon ID
           name: pokemon.name,
           url: pokemon.url,
         }));
@@ -54,6 +55,10 @@ const PokeList: React.FC = () => {
           <ul>
             {pokemonList.results.map((pokemon) => (
               <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
+                <img
+                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
+                  alt={pokemon.name}
+                />
                 {pokemon.name}
               </li>
             ))}
