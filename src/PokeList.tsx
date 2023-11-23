@@ -1,7 +1,7 @@
 // PokeList.tsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { PokemonList, PokemonDetails } from './types';
+import { Pokemon, PokemonList, PokemonDetails } from './types';
 import './PokeList.css';
 
 const PokeList: React.FC = () => {
@@ -69,8 +69,15 @@ const PokeList: React.FC = () => {
         {selectedPokemon && (
           <div>
             <h2>Details for {selectedPokemon.name}</h2>
-            {/* Display additional details about the selected Pokemon */}
             <p>ID: {selectedPokemon.id}</p>
+            <img
+              src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`}
+              alt={selectedPokemon.name}
+            />
+            <p>Height: {selectedPokemon.height} dm</p>
+            <p>Weight: {selectedPokemon.weight} hg</p>
+            <p>Abilities: {selectedPokemon.abilities.map((ability) => ability.ability.name).join(', ')}</p>
+            <p>Types: {selectedPokemon.types.map((type) => type.type.name).join(', ')}</p>
             {/* Add more details as needed */}
           </div>
         )}
