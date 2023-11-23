@@ -8,6 +8,10 @@
   .pokemon-details {
     flex: 1;
     margin-left: 20px; /* Adjust as needed for spacing */
+    max-height: 100vh; /* Set maximum height to the viewport height */
+    overflow-y: auto; /* Add vertical scroll if content overflows */
+    position: sticky;
+    top: 0; /* Stick to the top of the viewport */
   }
   
   .details-container {
