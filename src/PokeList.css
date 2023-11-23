@@ -1,20 +1,16 @@
 /* PokeList.css */
 .poke-container {
     display: flex;
-  }
-  
-  .pokemon-list {
-    flex: 0 0 200px; /* Fixed width for the Pokemon list */
-    position: fixed; /* Fixed position to stay in place */
-    height: 100vh; /* Full height of the viewport */
-    overflow-y: auto; /* Enable vertical scrolling if needed */
+    justify-content: space-between;
+    align-items: flex-start;
   }
   
   .pokemon-details {
     flex: 1;
-    margin-left: 220px; /* Adjust the margin as needed to create space for the fixed sidebar */
-    padding: 20px; /* Add padding for better readability */
-    box-sizing: border-box; /* Include padding in the width calculation */
-    overflow-y: auto; /* Enable vertical scrolling if needed */
+    margin-left: 20px; /* Adjust as needed for spacing */
+  }
+  
+  .details-container {
+    text-align: right;
   }
   

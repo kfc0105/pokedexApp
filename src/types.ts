@@ -26,6 +26,6 @@ export interface Pokemon {
         name: string;
       };
     }[];
-    // Add more properties as needed
+    
   }
   

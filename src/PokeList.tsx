@@ -13,7 +13,7 @@ const PokeList: React.FC = () => {
       try {
         let allPokemon: PokemonDetails[] = [];
 
-        // Make requests until there is no more 'next' link
+        // This keeps fetching until there is non left
         let nextUrl = 'https://pokeapi.co/api/v2/pokemon';
         while (nextUrl) {
           const response = await axios.get(nextUrl);
@@ -21,9 +21,9 @@ const PokeList: React.FC = () => {
           nextUrl = response.data.next;
         }
 
-        // Extract only the necessary properties (name, url, and id)
+        // Extract data and makes a key??
         const formattedPokemon: Pokemon[] = allPokemon.map((pokemon, index) => ({
-          id: index + 1, // Add 1 to index to get the correct Pokemon ID
+          id: index + 1, // Add 1 to index to get ID
           name: pokemon.name,
           url: pokemon.url,
         }));
@@ -55,6 +55,7 @@ const PokeList: React.FC = () => {
           <ul>
             {pokemonList.results.map((pokemon) => (
               <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
+                {/* this grabs the img */}
                 <img
                   src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
                   alt={pokemon.name}
@@ -67,18 +68,17 @@ const PokeList: React.FC = () => {
       </div>
       <div className="pokemon-details">
         {selectedPokemon && (
-          <div>
+          <div className="details-container">
             <h2>Details for {selectedPokemon.name}</h2>
-            <p>ID: {selectedPokemon.id}</p>
             <img
               src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`}
               alt={selectedPokemon.name}
             />
+            <p>ID: {selectedPokemon.id}</p>
             <p>Height: {selectedPokemon.height} dm</p>
             <p>Weight: {selectedPokemon.weight} hg</p>
             <p>Abilities: {selectedPokemon.abilities.map((ability) => ability.ability.name).join(', ')}</p>
             <p>Types: {selectedPokemon.types.map((type) => type.type.name).join(', ')}</p>
-            {/* Add more details as needed */}
           </div>
         )}
       </div>
