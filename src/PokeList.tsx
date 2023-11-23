@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { PokemonList, PokemonDetails } from './types';
+import './PokeList.css'; // Import a CSS file for styling
 
 const PokeList: React.FC = () => {
   const [pokemonList, setPokemonList] = useState<PokemonList | null>(null);
@@ -20,8 +21,14 @@ const PokeList: React.FC = () => {
           nextUrl = response.data.next;
         }
 
+        // Extract only the necessary properties (name and url)
+        const formattedPokemon: Pokemon[] = allPokemon.map((pokemon) => ({
+          name: pokemon.name,
+          url: pokemon.url,
+        }));
+
         // Set the complete list of Pokemon
-        setPokemonList({ count: allPokemon.length, results: allPokemon });
+        setPokemonList({ count: formattedPokemon.length, results: formattedPokemon });
       } catch (error) {
         console.error('Error fetching Pokemon data:', error);
       }
@@ -40,25 +47,29 @@ const PokeList: React.FC = () => {
   };
 
   return (
-    <div>
-      <h1>Pokemon List</h1>
-      {pokemonList && (
-        <ul>
-          {pokemonList.results.map((pokemon) => (
-            <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
-              {pokemon.name}
-            </li>
-          ))}
-        </ul>
-      )}
-      {selectedPokemon && (
-        <div>
-          <h2>Details for {selectedPokemon.name}</h2>
-          {/* Display additional details about the selected Pokemon */}
-          <p>ID: {selectedPokemon.id}</p>
-          {/* Add more details as needed */}
-        </div>
-      )}
+    <div className="poke-container">
+      <div className="pokemon-list">
+        <h1>Pokemon List</h1>
+        {pokemonList && (
+          <ul>
+            {pokemonList.results.map((pokemon) => (
+              <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
+                {pokemon.name}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <div className="pokemon-details">
+        {selectedPokemon && (
+          <div>
+            <h2>Details for {selectedPokemon.name}</h2>
+            {/* Display additional details about the selected Pokemon */}
+            <p>ID: {selectedPokemon.id}</p>
+            {/* Add more details as needed */}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
