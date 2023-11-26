@@ -12,8 +12,6 @@ const PokeList: React.FC = () => {
     const fetchData = async () => {
       try {
         let allPokemon: PokemonDetails[] = [];
-
-        // This keeps fetching until there is non left
         let nextUrl = 'https://pokeapi.co/api/v2/pokemon';
         while (nextUrl) {
           const response = await axios.get(nextUrl);
@@ -21,14 +19,12 @@ const PokeList: React.FC = () => {
           nextUrl = response.data.next;
         }
 
-        // Extract data and makes a key??
         const formattedPokemon: Pokemon[] = allPokemon.map((pokemon, index) => ({
-          id: index + 1, // Add 1 to index to get ID
+          id: index + 1,
           name: pokemon.name,
           url: pokemon.url,
         }));
 
-        // Set the complete list of Pokemon
         setPokemonList({ count: formattedPokemon.length, results: formattedPokemon });
       } catch (error) {
         console.error('Error fetching Pokemon data:', error);
@@ -47,15 +43,33 @@ const PokeList: React.FC = () => {
     }
   };
 
+  const handleSort = (option: string) => {
+    if (pokemonList) {
+      const sortedList = [...pokemonList.results];
+      sortedList.sort((a, b) => {
+        if (option === 'id') {
+          return a.id - b.id;
+        } else if (option === 'name') {
+          return a.name.localeCompare(b.name);
+        }
+        return 0;
+      });
+      setPokemonList({ ...pokemonList, results: sortedList });
+    }
+  };
+
   return (
     <div className="poke-container">
       <div className="pokemon-list">
         <h1>Pokemon List</h1>
+        <div>
+          <button onClick={() => handleSort('id')}>Sort by ID</button>
+          <button onClick={() => handleSort('name')}>Sort by Name</button>
+        </div>
         {pokemonList && (
           <ul>
             {pokemonList.results.map((pokemon) => (
               <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
-                {/* this grabs the img */}
                 <img
                   src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
                   alt={pokemon.name}
