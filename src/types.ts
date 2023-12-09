@@ -3,6 +3,11 @@ export interface Pokemon {
   id: number;
   name: string;
   url: string;
+  types: {
+    type: {
+      name: string;
+    };
+  }[];
 }
 
 export interface PokemonList {
