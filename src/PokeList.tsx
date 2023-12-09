@@ -5,57 +5,52 @@ import { Pokemon, PokemonList, PokemonDetails } from './types';
 import './PokeList.css';
 
 const PokeList: React.FC = () => {
-  // State to store the list of Pokemon and the currently selected Pokemon
   const [pokemonList, setPokemonList] = useState<PokemonList | null>(null);
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetails | null>(null);
+  const [sortBy, setSortBy] = useState<string>('id');
+  const [filterTypes, setFilterTypes] = useState<string[]>([]);
 
-  // Fetch Pokemon data when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch all Pokemon from the PokeAPI
-        let allPokemon: PokemonDetails[] = [];
-        let nextUrl = 'https://pokeapi.co/api/v2/pokemon';
-        while (nextUrl) {
-          const response = await axios.get(nextUrl);
-          allPokemon = [...allPokemon, ...response.data.results];
-          nextUrl = response.data.next;
-        }
+        const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=999999');
+        const data = response.data;
 
-        // Format the fetched data into a simpler Pokemon array
-        const formattedPokemon: Pokemon[] = allPokemon.map((pokemon, index) => ({
-          id: index + 1,
-          name: pokemon.name,
-          url: pokemon.url,
-        }));
+        // Fetch additional details for each Pokemon
+        const detailedPokemon: PokemonDetails[] = await Promise.all(
+          data.results.map(async (pokemon: Pokemon) => {
+            const detailedResponse = await axios.get(pokemon.url);
+            return detailedResponse.data;
+          })
+        );
 
-        // Set the formatted Pokemon list to the state
-        setPokemonList({ count: formattedPokemon.length, results: formattedPokemon });
+        setPokemonList({ count: detailedPokemon.length, results: detailedPokemon });
       } catch (error) {
         console.error('Error fetching Pokemon data:', error);
       }
     };
 
-    // Call the fetchData function
     fetchData();
-  }, []); // The empty dependency array ensures that this effect runs only once, similar to componentDidMount
+  }, []);
 
-  // Function to handle clicks on a Pokemon, fetching and setting details
-  const handlePokemonClick = async (url: string) => {
+  const handlePokemonClick = async (pokemon: PokemonDetails | Pokemon) => {
     try {
-      const response = await axios.get(url);
-      setSelectedPokemon(response.data);
+      if ('height' in pokemon) {
+        // It's a PokemonDetails type
+        setSelectedPokemon(pokemon);
+      } else {
+        // It's a Pokemon type, fetch details
+        const response = await axios.get<PokemonDetails>((pokemon as Pokemon).url);
+        setSelectedPokemon(response.data);
+      }
     } catch (error) {
       console.error('Error fetching Pokemon details:', error);
     }
   };
 
-  // Function to handle sorting of the Pokemon list based on ID or name
   const handleSort = (option: string) => {
     if (pokemonList) {
-      // Create a copy of the current list
       const sortedList = [...pokemonList.results];
-      // Sort the list based on the selected option (ID or name)
       sortedList.sort((a, b) => {
         if (option === 'id') {
           return a.id - b.id;
@@ -64,54 +59,90 @@ const PokeList: React.FC = () => {
         }
         return 0;
       });
-      // Update the Pokemon list in the state with the sorted list
       setPokemonList({ ...pokemonList, results: sortedList });
+      setSortBy(option);
     }
   };
 
-  // Render the component
+  const handleFilterChange = (type: string) => {
+    // Toggle the filter type
+    const updatedFilterTypes = filterTypes.includes(type)
+      ? filterTypes.filter((t) => t !== type)
+      : [...filterTypes, type];
+
+    setFilterTypes(updatedFilterTypes);
+  };
+
+  const filterPokemon = (pokemon: PokemonDetails) => {
+    // If no filter types selected, show all
+    if (filterTypes.length === 0) {
+      return true;
+    }
+
+    // Check if the Pokemon has at least one of the selected types
+    return pokemon.types.some((type) => filterTypes.includes(type.type.name));
+  };
+
   return (
     <div className="poke-container">
-      {/* Pokemon list section */}
       <div className="pokemon-list">
         <h1>Pokemon List</h1>
         <div>
-          {/* Buttons for sorting the list */}
-          <button onClick={() => handleSort('id')}>Sort by ID</button>
-          <button onClick={() => handleSort('name')}>Sort by Name</button>
+          <button onClick={() => handleSort('id')} className={sortBy === 'id' ? 'active' : ''}>
+            Sort by ID
+          </button>
+          <button onClick={() => handleSort('name')} className={sortBy === 'name' ? 'active' : ''}>
+            Sort by Name
+          </button>
         </div>
-        {/* Render the Pokemon list if available */}
+        <div>
+          <h2>Filter by Type</h2>
+          {['normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison', 'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dark', 'dragon', 'steel', 'fairy'].map((type) => (
+            <label key={type}>
+              <input
+                type="checkbox"
+                value={type}
+                checked={filterTypes.includes(type)}
+                onChange={() => handleFilterChange(type)}
+              />
+              {type}
+            </label>
+          ))}
+        </div>
         {pokemonList && (
           <ul>
-            {pokemonList.results.map((pokemon) => (
-              // Render each Pokemon item with an onClick event to handle clicks
-              <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon.url)}>
-                <img
-                  src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
-                  alt={pokemon.name}
-                />
-                {pokemon.name}
-              </li>
-            ))}
+            {pokemonList.results
+              .filter((pokemon) => filterPokemon(pokemon))
+              .map((pokemon) => (
+                <li key={pokemon.name} onClick={() => handlePokemonClick(pokemon)}>
+                  <img
+                    src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`}
+                    alt={pokemon.name}
+                  />
+                  {pokemon.name}
+                </li>
+              ))}
           </ul>
         )}
       </div>
 
-      {/* Pokemon details section */}
       <div className="pokemon-details">
         {selectedPokemon && (
           <div className="details-container">
             <h2>Details for {selectedPokemon.name}</h2>
-            {/* Display details for the selected Pokemon */}
             <img
               src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${selectedPokemon.id}.png`}
               alt={selectedPokemon.name}
             />
             <p>ID: {selectedPokemon.id}</p>
-            <p>Height: {selectedPokemon.height} dm</p>
-            <p>Weight: {selectedPokemon.weight} hg</p>
-            <p>Abilities: {selectedPokemon.abilities.map((ability) => ability.ability.name).join(', ')}</p>
-            <p>Types: {selectedPokemon.types.map((type) => type.type.name).join(', ')}</p>
+            {('height' in selectedPokemon) && (
+              <>
+                <p>Height: {selectedPokemon.height} dm</p>
+                <p>Weight: {selectedPokemon.weight} hg</p>
+                <p>Abilities: {selectedPokemon.abilities.map((ability) => ability.ability.name).join(', ')}</p>
+                <p>Types: {selectedPokemon.types.map((type) => type.type.name).join(', ')}</p>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -119,5 +150,4 @@ const PokeList: React.FC = () => {
   );
 };
 
-// Export the component
 export default PokeList;
