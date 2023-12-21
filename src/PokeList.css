@@ -24,7 +24,11 @@
 }
 
 .pokemon-details {
-  flex: 1;
+  position: fixed;
+  top: 0; /* Adjust as needed */
+  right: 0; /* Adjust as needed */
   max-height: 100vh;
   overflow-y: auto;
+  z-index: 1000; /* Adjust as needed, make sure it's higher than other elements */
 }
+

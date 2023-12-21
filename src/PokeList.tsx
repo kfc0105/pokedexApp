@@ -9,6 +9,8 @@ const PokeList: React.FC = () => {
   const [selectedPokemon, setSelectedPokemon] = useState<PokemonDetails | null>(null);
   const [sortBy, setSortBy] = useState<string>('id');
   const [filterTypes, setFilterTypes] = useState<string[]>([]);
+  const [userResponse, setUserResponse] = useState<boolean | null>(null);
+  const [aggregatedResponses, setAggregatedResponses] = useState<{ likes: number; dislikes: number }>({ likes: 0, dislikes: 0 });
 
   useEffect(() => {
     const fetchData = async () => {
@@ -16,7 +18,6 @@ const PokeList: React.FC = () => {
         const response = await axios.get('https://pokeapi.co/api/v2/pokemon?limit=999999');
         const data = response.data;
 
-        // Fetch additional details for each Pokemon
         const detailedPokemon: PokemonDetails[] = await Promise.all(
           data.results.map(async (pokemon: Pokemon) => {
             const detailedResponse = await axios.get(pokemon.url);
@@ -36,10 +37,8 @@ const PokeList: React.FC = () => {
   const handlePokemonClick = async (pokemon: PokemonDetails | Pokemon) => {
     try {
       if ('height' in pokemon) {
-        // It's a PokemonDetails type
         setSelectedPokemon(pokemon);
       } else {
-        // It's a Pokemon type, fetch details
         const response = await axios.get<PokemonDetails>((pokemon as Pokemon).url);
         setSelectedPokemon(response.data);
       }
@@ -47,6 +46,20 @@ const PokeList: React.FC = () => {
       console.error('Error fetching Pokemon details:', error);
     }
   };
+
+  const handleLikeDislike = async (liked: boolean) => {
+    // Update user's response
+    setUserResponse(liked);
+  
+    try {
+      const response = await axios.get<{ likes: number; dislikes: number }>('/api/aggregated-responses');
+      console.log('Aggregated Responses:', response.data);
+      setAggregatedResponses(response.data);
+    } catch (error) {
+      console.error('Error updating/fetching aggregated responses:', error);
+    }
+  };
+  
 
   const handleSort = (option: string) => {
     if (pokemonList) {
@@ -65,7 +78,6 @@ const PokeList: React.FC = () => {
   };
 
   const handleFilterChange = (type: string) => {
-    // Toggle the filter type
     const updatedFilterTypes = filterTypes.includes(type)
       ? filterTypes.filter((t) => t !== type)
       : [...filterTypes, type];
@@ -73,15 +85,22 @@ const PokeList: React.FC = () => {
     setFilterTypes(updatedFilterTypes);
   };
 
-  const filterPokemon = (pokemon: PokemonDetails) => {
+
+  
+  const filterPokemon = (pokemon: PokemonDetails | Pokemon): boolean => {
     // If no filter types selected, show all
     if (filterTypes.length === 0) {
       return true;
     }
-
+  
     // Check if the Pokemon has at least one of the selected types
-    return pokemon.types.some((type) => filterTypes.includes(type.type.name));
+    if ('types' in pokemon) {
+      return pokemon.types.some((type) => filterTypes.includes(type.type.name));
+    }
+  
+    return false;
   };
+  
 
   return (
     <div className="poke-container">
@@ -143,6 +162,19 @@ const PokeList: React.FC = () => {
                 <p>Types: {selectedPokemon.types.map((type) => type.type.name).join(', ')}</p>
               </>
             )}
+            <div className="like-dislike-buttons">
+              <button onClick={() => handleLikeDislike(true)} className={userResponse === true ? 'active' : ''}>
+                Like
+              </button>
+              <button onClick={() => handleLikeDislike(false)} className={userResponse === false ? 'active' : ''}>
+                Dislike
+              </button>
+            </div>
+            <div className="aggregated-responses">
+              <p>Aggregated Responses:</p>
+              <p>Likes: {aggregatedResponses.likes}</p>
+              <p>Dislikes: {aggregatedResponses.dislikes}</p>
+            </div>
           </div>
         )}
       </div>
